@@ -209,6 +209,7 @@ abstract class AbstractTestCase extends TestCase
 
     private function stopCodeCoverage(): void
     {
+        return;
         if (\extension_loaded('xdebug')) {
             \xdebug_stop_code_coverage(0);
         }
@@ -216,6 +217,7 @@ abstract class AbstractTestCase extends TestCase
 
     private function startCodeCoverage(): void
     {
+        return;
         if (\extension_loaded('xdebug')) {
             \xdebug_start_code_coverage(XDEBUG_CC_UNUSED | XDEBUG_CC_DEAD_CODE);
         }
