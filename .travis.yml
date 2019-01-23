@@ -1,8 +1,13 @@
 language: php
 
+os:
+  - windows
+  - linux
+  - osx
+
 branches:
     only:
-        - master
+        - test-ci
 
 jobs:
     include:
