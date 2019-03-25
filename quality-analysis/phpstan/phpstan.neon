@@ -18,12 +18,13 @@ parameters:
         # Closures instanceof always false of another scope
         - '#^Instanceof between \$this\(Ekino\\Drupal\\Debug\\Action\\DisplayDumpLocation\\DisplayDumpLocationAction\) and Symfony\\Component\\VarDumper\\Dumper\\HtmlDumper will always evaluate to false\.$#'
         # Intentional errors
-        - '#^Ekino\\Drupal\\Debug\\Tests\\Unit\\Kernel\\test_classes\\TestDebugKernelActionManager\:\:__construct\(\) does not call parent constructor from Ekino\\Drupal\\Debug\\Action\\ActionManager\.$#'
-        - '#^Ekino\\Drupal\\Debug\\Tests\\Unit\\Kernel\\test_classes\\TestDebugKernelInstantiationActionManager\:\:__construct\(\) does not call parent constructor from Ekino\\Drupal\\Debug\\Action\\ActionManager\.$#'
+        - '#^Ekino\\Drupal\\Debug\\Tests\\Unit\\Kernel\\test_classes\\TestDebugKernelActionRegistrar\:\:__construct\(\) does not call parent constructor from Ekino\\Drupal\\Debug\\Action\\ActionRegistrar\.$#'
+        - '#^Ekino\\Drupal\\Debug\\Tests\\Unit\\Kernel\\test_classes\\TestDebugKernelInstantiationActionRegistrar\:\:__construct\(\) does not call parent constructor from Ekino\\Drupal\\Debug\\Action\\ActionRegistrar\.$#'
         # Intentional ignores that are hard and useless to fix
         - '#^Cannot call method arrayNode\(\) on Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface\|null\.$#'
         - '#^Cannot call method scalarNode\(\) on Symfony\\Component\\Config\\Definition\\Builder\\NodeParentInterface\|null\.$#'
         - "#^Call to method PHPUnit\\\\Framework\\\\Assert::assertInstanceOf\\(\\) with 'Symfony\\\\\\\\Component…' and 'fcyccc' will always evaluate to false\\.$#"
+        - "#^Method Ekino\Drupal\Debug\Action\DisplayPrettyExceptionsASAP\DisplayPrettyExceptionsASAPOptions::addCharsetConfigurationNode() should return Symfony\Component\Config\Definition\Builder\NodeBuilder but returns Symfony\Component\Config\Definition\Builder\NodeParentInterface|null. $#"
         # Undocumented arg type in xdebug functions
         - '#^Parameter \#1 \$cleanup of function xdebug_stop_code_coverage expects bool, int given\.$#'
         # Undocumented arg type in PHP core functions
