@@ -21,6 +21,7 @@ use Ekino\Drupal\Debug\Extension\Model\CustomTheme;
 use Ekino\Drupal\Debug\Option\OptionsInterface;
 use Ekino\Drupal\Debug\Resource\Model\CustomExtensionFileResource;
 use Ekino\Drupal\Debug\Resource\Model\ResourcesCollection;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Symfony\Component\Config\Resource\SelfCheckingResourceInterface;
 
 abstract class AbstractFileBackendDependantOptions implements OptionsInterface
@@ -115,6 +116,11 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
         }
 
         return new static(\sprintf('%s/%s', $defaultsConfiguration->getCacheDirectory(), static::getDefaultCacheFileName()), new ResourcesCollection($defaultResources));
+    }
+
+    public static function addConfiguration(NodeBuilder $nodeBuilder)
+    {
+        // TODO: Implement addConfiguration() method.
     }
 
     /**

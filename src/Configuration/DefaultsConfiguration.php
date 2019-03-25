@@ -17,8 +17,13 @@ use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
-class Configuration implements ConfigurationInterface
+class DefaultsConfiguration implements ConfigurationInterface
 {
+    /**
+     * @var string
+     */
+    public const ROOT_KEY = 'defaults';
+
     /**
      * {@inheritdoc}
      */
@@ -26,28 +31,13 @@ class Configuration implements ConfigurationInterface
     {
         $treeBuilder = new TreeBuilder();
         /** @var ArrayNodeDefinition $rootNode */
-        $rootNode = $treeBuilder->root('drupal-debug');
+        $rootNode = $treeBuilder->root(self::ROOT_KEY);
 
         $rootNode
-            ->info('This is the drupal-debug configuration file.')
-            ->children()
-                ->append($this->getDefaultsConfigNode())
-                ->append($this->getSubstituteOriginalDrupalKernelConfigNode())
-            ->end();
-
-        return $treeBuilder;
-    }
-
-    /**
-     * @return ArrayNodeDefinition
-     */
-    private function getDefaultsConfigNode(): ArrayNodeDefinition
-    {
-        return (new ArrayNodeDefinition('defaults'))
             ->info('The defaults values are common values that are reused by different actions.')
             ->addDefaultsIfNotSet()
             ->children()
-                ->scalarNode('cache_directory')
+                ->scalarNode('cache_directory_path')
                     ->cannotBeEmpty()
                     ->defaultValue('cache')
                 ->end()
@@ -71,25 +61,7 @@ class Configuration implements ConfigurationInterface
                     ->defaultNull()
                 ->end()
             ->end();
-    }
 
-    /**
-     * @return ArrayNodeDefinition
-     */
-    private function getSubstituteOriginalDrupalKernelConfigNode(): ArrayNodeDefinition
-    {
-        return (new ArrayNodeDefinition('substitute_original_drupal_kernel'))
-            ->info("It is recommended to disable the original DrupalKernel substitution to run your tests.\nTo programmatically toggle it, use the two dedicated composer commands.")
-            ->canBeDisabled()
-            ->children()
-                ->scalarNode('composer_autoload_file_path')
-                    ->cannotBeEmpty()
-                    ->defaultValue('vendor/autoload.php')
-                ->end()
-                ->scalarNode('cache_directory')
-                    ->info('If not specified, it fall backs to the default cache directory.')
-                    ->defaultNull()
-                ->end()
-            ->end();
+        return $treeBuilder;
     }
 }

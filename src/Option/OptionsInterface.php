@@ -14,14 +14,11 @@ declare(strict_types=1);
 namespace Ekino\Drupal\Debug\Option;
 
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 
 interface OptionsInterface
 {
-    /**
-     * @param string                $appRoot
-     * @param DefaultsConfiguration $defaultsConfiguration
-     *
-     * @return self
-     */
-    public static function getDefault(string $appRoot, DefaultsConfiguration $defaultsConfiguration): self;
+    public static function getConfiguration(DefaultsConfiguration $defaultsConfiguration): ArrayNodeDefinition;
+
+    public static function getOptions(string $appRoot, array $processedConfiguration): OptionsInterface;
 }

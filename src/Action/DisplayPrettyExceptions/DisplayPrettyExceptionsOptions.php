@@ -16,6 +16,7 @@ namespace Ekino\Drupal\Debug\Action\DisplayPrettyExceptions;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Option\OptionsInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 class DisplayPrettyExceptionsOptions implements OptionsInterface
 {
@@ -79,5 +80,10 @@ class DisplayPrettyExceptionsOptions implements OptionsInterface
     public static function getDefault(string $appRoot, DefaultsConfiguration $defaultsConfiguration): OptionsInterface
     {
         return new self($defaultsConfiguration->getCharset(), $defaultsConfiguration->getFileLinkFormat(), $defaultsConfiguration->getLogger());
+    }
+
+    public static function addConfiguration(NodeBuilder $nodeBuilder)
+    {
+        // TODO: Implement addConfiguration() method.
     }
 }

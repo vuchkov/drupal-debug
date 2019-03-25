@@ -17,9 +17,9 @@ use Ekino\Drupal\Debug\Kernel\Helper\OriginalDrupalKernelHelper;
 if (!\function_exists('_drupal_debug_initialize')) {
     function _drupal_debug_initialize(): void
     {
-        ConfigurationManager::initialize();
+        $configurationManager = ConfigurationManager::get();
 
-        $substituteOriginalDrupalKernelConfiguration = ConfigurationManager::getSubstituteOriginalDrupalKernelConfiguration();
+        $substituteOriginalDrupalKernelConfiguration = $configurationManager->getSubstituteOriginalDrupalKernelConfiguration();
         if ($substituteOriginalDrupalKernelConfiguration->isEnabled()) {
             OriginalDrupalKernelHelper::substitute($substituteOriginalDrupalKernelConfiguration->getClassLoader(), $substituteOriginalDrupalKernelConfiguration->getCacheDirectory());
         }

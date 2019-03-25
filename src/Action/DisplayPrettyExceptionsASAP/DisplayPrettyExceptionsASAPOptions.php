@@ -15,6 +15,7 @@ namespace Ekino\Drupal\Debug\Action\DisplayPrettyExceptionsASAP;
 
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Option\OptionsInterface;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 class DisplayPrettyExceptionsASAPOptions implements OptionsInterface
 {
@@ -63,5 +64,10 @@ class DisplayPrettyExceptionsASAPOptions implements OptionsInterface
     public static function getDefault(string $appRoot, DefaultsConfiguration $defaultsConfiguration): OptionsInterface
     {
         return new self($defaultsConfiguration->getCharset(), $defaultsConfiguration->getFileLinkFormat());
+    }
+
+    public static function addConfiguration(NodeBuilder $nodeBuilder)
+    {
+        // TODO: Implement addConfiguration() method.
     }
 }

@@ -16,6 +16,8 @@ namespace Ekino\Drupal\Debug\Action\ThrowErrorsAsExceptions;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Option\OptionsInterface;
 use Psr\Log\LoggerInterface;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 class ThrowErrorsAsExceptionsOptions implements OptionsInterface
 {
@@ -53,6 +55,17 @@ class ThrowErrorsAsExceptionsOptions implements OptionsInterface
     public function getLogger(): ?LoggerInterface
     {
         return $this->logger;
+    }
+
+    public static function getConfiguration(DefaultsConfiguration $defaultsConfiguration): ArrayNodeDefinition
+    {
+        return (new ArrayNodeDefinition())
+
+    }
+
+    public static function getOptions(string $appRoot, array $processedConfiguration): OptionsInterface
+    {
+
     }
 
     /**

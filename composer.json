@@ -31,7 +31,7 @@
         "php": ">=7.1",
         "composer-plugin-api": "^1.1",
         "drupal/core": "^8.6",
-        "monolog/monolog": "^1.3",
+        "monolog/monolog": "^1.4",
         "nesbot/carbon": "^1.24",
         "symfony/config": "^3.4 || >=4.0 <4.3",
         "symfony/console": "^3.4 || ^4.0",

@@ -13,15 +13,21 @@ declare(strict_types=1);
 
 namespace Ekino\Drupal\Debug\Configuration;
 
+use Ekino\Drupal\Debug\ActionMetadata\ActionMetadataFactory;
+use Ekino\Drupal\Debug\ActionMetadata\ActionMetadataManager;
 use Ekino\Drupal\Debug\Cache\FileCache;
-use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
-use Ekino\Drupal\Debug\Configuration\Model\SubstituteOriginalDrupalKernelConfiguration;
+use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
+use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
+use Ekino\Drupal\Debug\Configuration\Model\SubstituteOriginalDrupalKernelConfiguration as SubstituteOriginalDrupalKernelConfigurationModel;
 use Ekino\Drupal\Debug\Resource\Model\ResourcesCollection;
+use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\Config\Definition\Processor;
 use Symfony\Component\Config\Resource\FileExistenceResource;
 use Symfony\Component\Config\Resource\FileResource;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\PropertyAccess\PropertyAccess;
+use Symfony\Component\PropertyAccess\PropertyAccessor;
 use Symfony\Component\Yaml\Parser;
 
 class ConfigurationManager
@@ -29,113 +35,215 @@ class ConfigurationManager
     /**
      * @var string
      */
-    const CONFIGURATION_FILE_PATH_ENVIRONMENT_VARIABLE_NAME = 'DRUPAL_DEBUG_CONFIGURATION_FILE_PATH';
+    public const CONFIGURATION_FILE_PATH_ENVIRONMENT_VARIABLE_NAME = 'DRUPAL_DEBUG_CONFIGURATION_FILE_PATH';
 
     /**
      * @var string
      */
-    const CONFIGURATION_CACHE_DIRECTORY_ENVIRONMENT_VARIABLE_NAME = 'DRUPAL_DEBUG_CONFIGURATION_CACHE_DIRECTORY';
+    public const CONFIGURATION_CACHE_DIRECTORY_ENVIRONMENT_VARIABLE_NAME = 'DRUPAL_DEBUG_CONFIGURATION_CACHE_DIRECTORY_PATH';
 
     /**
      * @var string
      */
-    const DEFAULT_CONFIGURATION_FILE_NAME = 'drupal-debug.yml.dist';
+    private const DEFAULT_CONFIGURATION_FILE_NAME = 'drupal-debug.yml.dist';
+
+    /**
+     * @var string
+     */
+    private const ROOT_KEY = 'drupal-debug';
+
+    /**
+     * @var self|null
+     */
+    private static $instance = null;
+
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
+     * @var PropertyAccessor
+     */
+    private $propertyAccessor;
+
+    /**
+     * @var string
+     */
+    private $configurationFilePath;
 
     /**
      * @var bool
      */
-    private static $initialized = false;
+    private $configurationFilePathExists;
 
     /**
-     * @var array|null
+     * @var string
      */
-    private static $configurationFilePathInfo = null;
+    private $configurationFilePathDirectory;
 
     /**
-     * @var array|null
+     * @var DefaultsConfigurationModel
      */
-    private static $processedConfigurations = null;
+    private $defaultsConfiguration;
 
     /**
-     * @var DefaultsConfiguration|null
+     * @var SubstituteOriginalDrupalKernelConfigurationModel
      */
-    private static $defaultsConfiguration = null;
+    private $substituteOriginalDrupalKernelConfiguration;
 
     /**
-     * @var SubstituteOriginalDrupalKernelConfiguration|null
+     * @var ActionConfiguration[]
      */
-    private static $substituteOriginalDrupalKernelConfiguration = null;
+    private $actionsConfigurations;
 
-    public static function initialize(): void
+    private function __construct()
     {
-        if (self::$initialized) {
-            throw new \RuntimeException('The configuration should not be initialized twice.');
-        }
-
-        self::$initialized = true;
-
         $configurationCacheDirectory = \getenv(self::CONFIGURATION_CACHE_DIRECTORY_ENVIRONMENT_VARIABLE_NAME);
         if (false === $configurationCacheDirectory) {
             $configurationCacheDirectory = \sys_get_temp_dir();
         }
 
-        $configurationFilePathInfo = self::getConfigurationFilePathInfo();
-        list($configurationFilePath, $configurationFilePathExists) = $configurationFilePathInfo;
+        $this->filesystem = new Filesystem();
+
+        $this->propertyAccessor = PropertyAccess::createPropertyAccessor();
+
+        $this->setConfigurationFilePathInfo();
 
         $fileCache = new FileCache(\sprintf('%s/drupal_debug_configuration.php', $configurationCacheDirectory), new ResourcesCollection(array(
-            $configurationFilePathExists ? new FileResource($configurationFilePath) : new FileExistenceResource($configurationFilePath),
+            $this->configurationFilePathExists ? new FileResource($this->configurationFilePath) : new FileExistenceResource($this->configurationFilePath),
             new FileResource(\sprintf('%s/Configuration.php', __DIR__)),
         )));
         if ($fileCache->isFresh() && !empty($data = $fileCache->getData())) {
             list(
-                'defaults' => self::$defaultsConfiguration,
-                'substitute_original_drupal_kernel' => self::$substituteOriginalDrupalKernelConfiguration
+                'defaults' => $this->defaultsConfiguration,
+                'substitute_original_drupal_kernel' => $this->substituteOriginalDrupalKernelConfiguration,
+                'actions' => $this->actionsConfigurations,
             ) = \array_map(function ($serializedConfiguration) {
                 return \unserialize($serializedConfiguration);
             }, $data);
         } else {
-            self::$configurationFilePathInfo = $configurationFilePathInfo;
+            $configurationFileContent = $this->getConfigurationFileContent();
+
+            $this->setDefaultsConfiguration($configurationFileContent);
+            $this->setSubstituteOriginalDrupalKernelConfiguration($configurationFileContent);
+            $this->setActionsConfigurations($configurationFileContent, $this->getDefaultsConfiguration());
 
             $fileCache->invalidate();
             $fileCache->write(array(
-                'defaults' => \serialize(self::getDefaultsConfiguration()),
-                'substitute_original_drupal_kernel' => \serialize(self::getSubstituteOriginalDrupalKernelConfiguration()),
+                'defaults' => \serialize($this->defaultsConfiguration),
+                'substitute_original_drupal_kernel' => \serialize($this->substituteOriginalDrupalKernelConfiguration),
+                'actions' => \serialize($this->actionsConfigurations),
             ));
         }
     }
 
-    /**
-     * @return DefaultsConfiguration
-     */
-    public static function getDefaultsConfiguration(): DefaultsConfiguration
+    public static function get(): self
     {
-        if (!self::$defaultsConfiguration instanceof DefaultsConfiguration) {
-            self::process();
-
-            self::$defaultsConfiguration = new DefaultsConfiguration(self::$processedConfigurations['defaults']);
+        if (!self::$instance instanceof self) {
+            self::$instance = new self();
         }
 
-        return self::$defaultsConfiguration;
+        return self::$instance;
     }
 
-    /**
-     * @return SubstituteOriginalDrupalKernelConfiguration
-     */
-    public static function getSubstituteOriginalDrupalKernelConfiguration(): SubstituteOriginalDrupalKernelConfiguration
+    public function getDefaultsConfiguration(): DefaultsConfigurationModel
     {
-        if (!self::$substituteOriginalDrupalKernelConfiguration instanceof SubstituteOriginalDrupalKernelConfiguration) {
-            self::process();
+        return $this->defaultsConfiguration;
+    }
 
-            self::$substituteOriginalDrupalKernelConfiguration = new SubstituteOriginalDrupalKernelConfiguration(self::$processedConfigurations['substitute_original_drupal_kernel']);
+    private function setDefaultsConfiguration(array $configurationFileContent): void
+    {
+        $this->defaultsConfiguration = new DefaultsConfigurationModel(
+            $this->makeRelativePathsAbsolutes(
+                $this->getProcessedDefaultsConfiguration($configurationFileContent),
+                array_map(function (array $elements) {
+                    return sprintf('[%s][%s]', DefaultsConfiguration::ROOT_KEY, implode('][', $elements));
+                }, [
+                    [
+                        'cache_directory_path',
+                    ],
+                    [
+                        'logger',
+                        'file_path',
+                    ],
+                ])
+            )
+        );
+    }
+
+    public function getSubstituteOriginalDrupalKernelConfiguration(): SubstituteOriginalDrupalKernelConfigurationModel
+    {
+        return $this->substituteOriginalDrupalKernelConfiguration;
+    }
+
+    private function setSubstituteOriginalDrupalKernelConfiguration(array $configurationFileContent): void
+    {
+        $this->substituteOriginalDrupalKernelConfiguration = new SubstituteOriginalDrupalKernelConfigurationModel(
+            $this->makeRelativePathsAbsolutes(
+                $this->getProcessedSubstituteOriginalDrupalKernelConfiguration($configurationFileContent),
+                array_map(function (array $elements) {
+                    return sprintf('[%s][%s]', SubstituteOriginalDrupalKernelConfiguration::ROOT_KEY, implode('][', $elements));
+                }, [
+                    [
+                        'composer_autoload_file_path',
+                    ],
+                    [
+                        'cache_directory_path',
+                    ],
+                ])
+            )
+        );
+    }
+
+    public function getActionConfiguration(string $class): ActionConfiguration
+    {
+        return $this->actionsConfigurations[$class];
+    }
+
+    private function setActionsConfigurations(array $configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): void
+    {
+        $this->actionsConfigurations = array();
+
+        $actionMetadataManager = ActionMetadataManager::getInstance();
+        $actionMetadataFactory = new ActionMetadataFactory();
+
+        foreach ($configurationFileContent[ActionsConfiguration::ROOT_KEY] ?? [] as $shortName => $config) {
+            $actionMetadataManager->add($actionMetadataFactory->create($shortName));
         }
 
-        return self::$substituteOriginalDrupalKernelConfiguration;
+        $processedActionsConfiguration = $this->getProcessedActionsConfiguration($configurationFileContent, $actionMetadataManager->all(), $defaultsConfiguration);
+        $propertyPaths = [];
+
+        $buildPropertyPathsRecursively = function (array $array, array $previous = []) use (&$buildPropertyPathsRecursively, &$propertyPaths): void {
+            foreach ($array as $key => $row) {
+                if (is_string($row) && 1 === preg_match('/_path$/i', $row)) {
+                    $propertyPaths[] = sprintf('[%s][%s]', ActionsConfiguration::ROOT_KEY, implode('][', $previous));
+                } elseif (is_array($row)) {
+                    $buildPropertyPathsRecursively($row, $previous[] = $key);
+                }
+            }
+        };
+
+        foreach ($processedActionsConfiguration[ActionsConfiguration::ROOT_KEY] as $shortName => $processedActionConfiguration) {
+            if ($actionMetadataManager->isCoreAction($shortName)) {
+                continue;
+            }
+
+            $buildPropertyPathsRecursively($processedActionsConfiguration);
+        }
+
+        foreach (
+            $this->makeRelativePathsAbsolutes(
+                $processedActionsConfiguration,
+                $propertyPaths
+            ) as $shortName => $processedActionConfiguration
+        ) {
+            $this->actionsConfigurations[$shortName] = new ActionConfiguration($processedActionConfiguration);
+        }
     }
 
-    /**
-     * @return array
-     */
-    public static function getConfigurationFilePathInfo(): array
+    private function setConfigurationFilePathInfo(): void
     {
         $possibleConfigurationFilePath = \getenv(self::CONFIGURATION_FILE_PATH_ENVIRONMENT_VARIABLE_NAME);
         if (false === $possibleConfigurationFilePath) {
@@ -175,80 +283,77 @@ class ConfigurationManager
             }
         }
 
-        return array(
-            $possibleConfigurationFilePath,
-            $exists,
-        );
+        $this->configurationFilePath = $possibleConfigurationFilePath;
+        $this->configurationFilePathExists = $exists;
+        $this->configurationFilePathDirectory = \dirname($this->configurationFilePath);
     }
 
-    private static function process(): void
+    private function getConfigurationFileContent(): array
     {
-        if (!self::$initialized) {
-            throw new \RuntimeException('The configuration has not been initialized.');
-        }
-
-        if (\is_array(self::$processedConfigurations)) {
-            return;
-        }
-
-        $processedConfigurations = (new Processor())->process((new Configuration())->getConfigTreeBuilder()->buildTree(), self::getConfigurationFileContent());
-        self::$processedConfigurations = self::makeRelativePathsAbsolutes($processedConfigurations);
-    }
-
-    /**
-     * @return array
-     */
-    private static function getConfigurationFileContent(): array
-    {
-        list($configurationFilePath, $configurationFilePathExists) = self::$configurationFilePathInfo;
-        if (!$configurationFilePathExists) {
+        if (!$this->configurationFilePathExists) {
             return array();
         }
 
         $parser = new Parser();
-        $content = $parser->parseFile($configurationFilePath);
+        $content = $parser->parseFile($this->configurationFilePath);
         if (!\is_array($content)) {
-            throw new \RuntimeException('The content of the drupal-debug configuration file should be an array.');
+            throw new InvalidConfigurationException('The content of the drupal-debug configuration file should be an array.');
         }
 
         return $content;
     }
 
-    /**
-     * @param array $processedConfigurations
-     *
-     * @return array
-     */
-    private static function makeRelativePathsAbsolutes(array $processedConfigurations): array
+    private function getProcessedDefaultsConfiguration(array $configurationFileContent): array
     {
-        $filesystem = new Filesystem();
-
-        $propertyAccessor = PropertyAccess::createPropertyAccessor();
-
-        $configurationPaths = array(
-            '[defaults][cache_directory]',
-            '[defaults][logger][file_path]',
-            '[substitute_original_drupal_kernel][composer_autoload_file_path]',
-            '[substitute_original_drupal_kernel][cache_directory]',
+        return $this->getProcessedConfiguration(
+            $configurationFileContent,
+            new DefaultsConfiguration()
         );
+    }
 
-        list($configurationFilePath) = self::$configurationFilePathInfo;
-        $configurationFilePathDirectory = \dirname($configurationFilePath);
-        foreach ($configurationPaths as $configurationPath) {
-            if (!$propertyAccessor->isReadable($processedConfigurations, $configurationPath)) {
+    private function getProcessedSubstituteOriginalDrupalKernelConfiguration(array $configurationFileContent): array
+    {
+        return $this->getProcessedConfiguration(
+            $configurationFileContent,
+            new SubstituteOriginalDrupalKernelConfiguration()
+        );
+    }
+
+    private function getProcessedActionsConfiguration(array $configurationFileContent, array $actionMetadata, DefaultsConfigurationModel $defaultsConfiguration): array
+    {
+        return $this->getProcessedConfiguration(
+            $configurationFileContent,
+            new ActionsConfiguration($actionMetadata, $defaultsConfiguration)
+        );
+    }
+
+    private function getProcessedConfiguration(array $configurationFileContent, ConfigurationInterface $configuration): array
+    {
+        return (new Processor())->process(
+            $configuration
+                ->getConfigTreeBuilder()
+                ->buildTree(),
+            $configurationFileContent
+        );
+    }
+
+    private function makeRelativePathsAbsolutes(array $processedConfiguration, array $propertyPaths): array
+    {
+        foreach ($propertyPaths as $propertyPath) {
+            if (!$this->propertyAccessor->isReadable($processedConfiguration, $propertyPath)) {
                 continue;
             }
 
-            $path = $propertyAccessor->getValue($processedConfigurations, $configurationPath);
+            $path = $this->propertyAccessor->getValue($processedConfiguration, $propertyPath);
             if (null === $path || '' === $path) {
                 continue;
             }
 
-            if (!$filesystem->isAbsolutePath($path)) {
-                $propertyAccessor->setValue($processedConfigurations, $configurationPath, \sprintf('%s/%s', $configurationFilePathDirectory, $path));
+            if (!$this->filesystem->isAbsolutePath($path)) {
+                $this->propertyAccessor->setValue($processedConfiguration, $propertyPath, \sprintf('%s/%s', $this->configurationFilePathDirectory, $path));
             }
         }
 
-        return $processedConfigurations;
+        return $processedConfiguration;
     }
 }
