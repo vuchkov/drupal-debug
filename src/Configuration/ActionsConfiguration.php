@@ -22,9 +22,6 @@ use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConf
 
 class ActionsConfiguration implements ConfigurationInterface
 {
-    /**
-     * @var string
-     */
     public const ROOT_KEY = 'actions';
 
     /**
@@ -32,9 +29,6 @@ class ActionsConfiguration implements ConfigurationInterface
      */
     private $actionsMetadata;
 
-    /**
-     * @var DefaultsConfiguration
-     */
     private $defaultsConfiguration;
 
     /**
@@ -55,22 +49,21 @@ class ActionsConfiguration implements ConfigurationInterface
         $treeBuilder = new TreeBuilder();
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->root(self::ROOT_KEY);
-        $rootNode
+        $nodeBuilder =$rootNode
             ->addDefaultsIfNotSet()
             ->children();
 
         foreach ($this->actionsMetadata as $actionMetadata) {
-            $sub = $rootNode
+            $childrenNodeBuilder = $nodeBuilder
                 ->arrayNode($actionMetadata->getShortName())
                     ->canBeDisabled()
                     ->children();
 
             if ($actionMetadata instanceof ActionWithOptionsMetadata) {
-                $sub
-                    ->append($actionMetadata->getOptionsClass()::getConfiguration($this->defaultsConfiguration));
+                $actionMetadata->getOptionsClass()::addConfiguration($childrenNodeBuilder, $this->defaultsConfiguration);
             }
 
-            $sub
+            $childrenNodeBuilder
                 ->end();
         }
 

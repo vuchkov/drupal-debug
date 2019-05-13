@@ -71,10 +71,6 @@ class SubstituteOriginalDrupalKernelConfiguration extends AbstractConfiguration
             throw new \LogicException('The cache directory getter should not be called if the original DrupalKernel substitution is disabled.');
         }
 
-        if (!isset($this->processedConfiguration['cache_directory'])) {
-            return ConfigurationManager::getDefaultsConfiguration()->getCacheDirectory();
-        }
-
         return $this->processedConfiguration['cache_directory'];
     }
 

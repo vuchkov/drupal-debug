@@ -127,7 +127,7 @@ class AbstractFileBackendDependantOptionsTestClass extends AbstractFileBackendDe
         );
     }
 
-    protected static function getDefaultCacheFileName(): string
+    protected static function getCacheFileName(): string
     {
         return 'fcy.php';
     }

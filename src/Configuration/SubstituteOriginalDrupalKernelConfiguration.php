@@ -16,6 +16,7 @@ namespace Ekino\Drupal\Debug\Configuration;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
+use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
 class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterface
 {
@@ -23,6 +24,13 @@ class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterf
      * @var string
      */
     public const ROOT_KEY = 'substitute_original_drupal_kernel';
+
+    private $defaultsConfiguration;
+
+    public function __construct(DefaultsConfigurationModel $defaultsConfiguration)
+    {
+        $this->defaultsConfiguration = $defaultsConfiguration;
+    }
 
     /**
      * {@inheritdoc}
@@ -43,7 +51,7 @@ class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterf
                 ->end()
                 ->scalarNode('cache_directory_path')
                     ->info('If not specified, it fall backs to the default cache directory path.')
-                    ->defaultNull()
+                    ->defaultValue($this->defaultsConfiguration->getCacheDirectoryPath())
                 ->end()
           ->end();
 

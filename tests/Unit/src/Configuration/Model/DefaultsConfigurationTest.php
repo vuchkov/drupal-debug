@@ -24,7 +24,7 @@ class DefaultsConfigurationTest extends TestCase
     {
         $this->assertSame('/foo/cache', (new DefaultsConfiguration(array(
             'cache_directory' => '/foo/cache',
-        )))->getCacheDirectory());
+        )))->getCacheDirectoryPath());
     }
 
     /**

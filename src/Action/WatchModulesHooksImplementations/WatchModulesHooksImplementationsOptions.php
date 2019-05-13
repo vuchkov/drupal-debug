@@ -30,7 +30,7 @@ class WatchModulesHooksImplementationsOptions extends AbstractFileBackendDependa
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultCacheFileName(): string
+    protected static function getCacheFileName(): string
     {
         return 'modules_hooks.php';
     }

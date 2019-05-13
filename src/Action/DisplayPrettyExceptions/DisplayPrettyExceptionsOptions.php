@@ -13,6 +13,10 @@ declare(strict_types=1);
 
 namespace Ekino\Drupal\Debug\Action\DisplayPrettyExceptions;
 
+use Ekino\Drupal\Debug\Configuration\CharsetConfigurationTrait;
+use Ekino\Drupal\Debug\Configuration\FileLinkFormatConfigurationTrait;
+use Ekino\Drupal\Debug\Configuration\LoggerConfigurationTrait;
+use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Option\OptionsInterface;
 use Psr\Log\LoggerInterface;
@@ -20,6 +24,10 @@ use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 
 class DisplayPrettyExceptionsOptions implements OptionsInterface
 {
+    use CharsetConfigurationTrait;
+    use FileLinkFormatConfigurationTrait;
+    use LoggerConfigurationTrait;
+
     /**
      * @var string|null
      */
@@ -71,19 +79,19 @@ class DisplayPrettyExceptionsOptions implements OptionsInterface
         return $this->logger;
     }
 
-    /**
-     * @param string                $appRoot
-     * @param DefaultsConfiguration $defaultsConfiguration
-     *
-     * @return DisplayPrettyExceptionsOptions
-     */
-    public static function getDefault(string $appRoot, DefaultsConfiguration $defaultsConfiguration): OptionsInterface
+    public static function addConfiguration(NodeBuilder $nodeBuilder, DefaultsConfiguration $defaultsConfiguration): void
     {
-        return new self($defaultsConfiguration->getCharset(), $defaultsConfiguration->getFileLinkFormat(), $defaultsConfiguration->getLogger());
+        self::addCharsetConfigurationNodeFromDefaultsConfiguration($nodeBuilder, $defaultsConfiguration);
+        self::addFileLinkFormatConfigurationNodeFromDefaultsConfiguration($nodeBuilder, $defaultsConfiguration);
+        self::addLoggerConfigurationNodeFromDefaultsConfiguration($nodeBuilder, $defaultsConfiguration);
     }
 
-    public static function addConfiguration(NodeBuilder $nodeBuilder)
+    public static function getOptions(string $appRoot, ActionConfiguration $actionConfiguration): OptionsInterface
     {
-        // TODO: Implement addConfiguration() method.
+        return new self(
+            self::getConfiguredCharset($actionConfiguration),
+            self::getConfiguredFileLinkFormat($actionConfiguration),
+            self::getConfiguredLogger($actionConfiguration)
+        );
     }
 }

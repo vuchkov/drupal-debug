@@ -14,6 +14,9 @@ declare(strict_types=1);
 use Ekino\Drupal\Debug\Configuration\ConfigurationManager;
 use Ekino\Drupal\Debug\Kernel\Helper\OriginalDrupalKernelHelper;
 
+error_reporting(E_ALL);
+ini_set('display_errors', '1');
+
 if (!\function_exists('_drupal_debug_initialize')) {
     function _drupal_debug_initialize(): void
     {

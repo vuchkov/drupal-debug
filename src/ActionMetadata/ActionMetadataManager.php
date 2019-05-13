@@ -21,20 +21,16 @@ use Ekino\Drupal\Debug\ActionMetadata\Model\ActionWithOptionsMetadata;
 
 class ActionMetadataManager
 {
-    /**
-     * @var array
-     */
     private const CORE_ACTIONS = [
         'disable_css_aggregation' => [
             ActionMetadata::class,
-            [
-                DisableCSSAggregationAction::class,
-            ],
+            DisableCSSAggregationAction::class,
+            [],
         ],
         'throw_errors_as_exceptions' => [
             ActionWithOptionsMetadata::class,
+            ThrowErrorsAsExceptionsAction::class,
             [
-                ThrowErrorsAsExceptionsAction::class,
                 ThrowErrorsAsExceptionsOptions::class,
             ],
         ],
@@ -49,8 +45,8 @@ class ActionMetadataManager
 
     private function __construct()
     {
-        foreach (self::CORE_ACTIONS as $shortName => list($actionMetadataClass, $args)) {
-            $this->add(new $actionMetadataClass($args));
+        foreach (self::CORE_ACTIONS as $shortName => list($actionMetadataClass, $actionClass, $args)) {
+            $this->add(new $actionMetadataClass(new \ReflectionClass($actionClass), $shortName, ...$args));
         }
     }
 
@@ -78,6 +74,8 @@ class ActionMetadataManager
         }
 
         $this->actionsMetadata[$shortName] = $actionMetadata;
+
+        return $this;
     }
 
     public function isCoreAction(string $shortName): bool

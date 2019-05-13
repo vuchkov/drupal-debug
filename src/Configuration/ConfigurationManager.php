@@ -112,7 +112,7 @@ class ConfigurationManager
 
         $fileCache = new FileCache(\sprintf('%s/drupal_debug_configuration.php', $configurationCacheDirectory), new ResourcesCollection(array(
             $this->configurationFilePathExists ? new FileResource($this->configurationFilePath) : new FileExistenceResource($this->configurationFilePath),
-            new FileResource(\sprintf('%s/Configuration.php', __DIR__)),
+            new FileResource(\sprintf('%s/ConfigurationManager.php', __DIR__)),
         )));
         if ($fileCache->isFresh() && !empty($data = $fileCache->getData())) {
             list(

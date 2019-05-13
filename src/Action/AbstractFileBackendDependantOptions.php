@@ -13,6 +13,8 @@ declare(strict_types=1);
 
 namespace Ekino\Drupal\Debug\Action;
 
+use Ekino\Drupal\Debug\Configuration\CacheDirectoryPathConfigurationTrait;
+use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Exception\NotImplementedException;
 use Ekino\Drupal\Debug\Extension\CustomExtensionDiscovery;
@@ -26,6 +28,8 @@ use Symfony\Component\Config\Resource\SelfCheckingResourceInterface;
 
 abstract class AbstractFileBackendDependantOptions implements OptionsInterface
 {
+    use CacheDirectoryPathConfigurationTrait;
+
     /**
      * @var string
      */
@@ -115,12 +119,71 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
             $defaultResources = static::getDefaultResources($customModules, $customThemes);
         }
 
-        return new static(\sprintf('%s/%s', $defaultsConfiguration->getCacheDirectory(), static::getDefaultCacheFileName()), new ResourcesCollection($defaultResources));
+        return new static(\sprintf('%s/%s', $defaultsConfiguration->getCacheDirectoryPath(), static::getCacheFileName()), new ResourcesCollection($defaultResources));
     }
 
-    public static function addConfiguration(NodeBuilder $nodeBuilder)
+    public static function addConfiguration(NodeBuilder $nodeBuilder, DefaultsConfiguration $defaultsConfiguration): void
     {
-        // TODO: Implement addConfiguration() method.
+        if (static::canHaveModuleFileResourceMasks() || static::canHaveThemeFileResourceMasks()) {
+            $childrenNodeBuilders = [$nodeBuilder];
+            if ($canHaveBothExtensionTypeFileResourceMasks = (static::canHaveModuleFileResourceMasks() && static::canHaveThemeFileResourceMasks())) {
+                $childrenNodeBuilders = [];
+                foreach (['module', 'theme'] as $extensionType) {
+                    $childrenNodeBuilders[] = $nodeBuilder
+                        ->arrayNode($extensionType)
+                            ->children();
+                }
+            }
+
+            foreach ($childrenNodeBuilders as $childrenNodeBuilder) {
+                $childrenNodeBuilder
+                    ->booleanNode('include_defaults')
+                        ->defaultTrue()
+                    ->end()
+                    ->arrayNode('file_resource_masks')
+                        ->scalarPrototype()
+                    ->end();
+
+                if ($canHaveBothExtensionTypeFileResourceMasks) {
+                    $childrenNodeBuilder->end();
+                }
+            }
+        }
+
+        self::addCacheDirectoryPathConfigurationNodeFromDefaultsConfiguration($nodeBuilder, $defaultsConfiguration);
+    }
+
+    public static function getOptions(string $appRoot, ActionConfiguration $actionConfiguration): OptionsInterface
+    {
+        $resources = array();
+
+        $processedConfiguration = $actionConfiguration->getProcessedConfiguration();
+
+        if (!empty($defaultModuleFileResourceMasks) || !empty($defaultThemeFileResourceMasks)) {
+            $customExtensionDiscovery = new CustomExtensionDiscovery($appRoot);
+            $customModules = array();
+            $customThemes = array();
+
+            if (!empty($defaultModuleFileResourceMasks)) {
+                $customModules = $customExtensionDiscovery->getCustomModules();
+            }
+
+            if (!empty($defaultThemeFileResourceMasks)) {
+                $customThemes = $customExtensionDiscovery->getCustomThemes();
+            }
+
+            $defaultResources = static::getDefaultResources($customModules, $customThemes);
+        }
+
+        return new static(
+            \sprintf('%s/%s', self::getConfiguredCacheDirectoryPath($actionConfiguration), static::getCacheFileName()),
+            new ResourcesCollection($resources)
+        );
+    }
+
+    protected static function canHaveModuleFileResourceMasks(): bool
+    {
+        return false;
     }
 
     /**
@@ -129,6 +192,11 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
     protected static function getDefaultModuleFileResourceMasks(): array
     {
         return array();
+    }
+
+    protected static function canHaveThemeFileResourceMasks(): bool
+    {
+        return false;
     }
 
     /**
@@ -142,7 +210,7 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
     /**
      * @return string
      */
-    protected static function getDefaultCacheFileName(): string
+    protected static function getCacheFileName(): string
     {
         return \rtrim((new \ReflectionClass(static::class))->getShortName(), 'Action');
     }

@@ -31,7 +31,7 @@ class WatchContainerDefinitionsOptions extends AbstractFileBackendDependantOptio
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultCacheFileName(): string
+    protected static function getCacheFileName(): string
     {
         return 'container_definition.php';
     }

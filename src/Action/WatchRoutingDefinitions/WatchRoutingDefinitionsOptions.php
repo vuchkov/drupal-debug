@@ -30,7 +30,7 @@ class WatchRoutingDefinitionsOptions extends AbstractFileBackendDependantOptions
     /**
      * {@inheritdoc}
      */
-    protected static function getDefaultCacheFileName(): string
+    protected static function getCacheFileName(): string
     {
         return 'routing.meta';
     }

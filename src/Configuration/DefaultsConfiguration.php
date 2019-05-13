@@ -19,6 +19,11 @@ use Symfony\Component\Config\Definition\ConfigurationInterface;
 
 class DefaultsConfiguration implements ConfigurationInterface
 {
+    use CacheDirectoryPathConfigurationTrait;
+    use LoggerConfigurationTrait;
+    use CharsetConfigurationTrait;
+    use FileLinkFormatConfigurationTrait;
+
     /**
      * @var string
      */
@@ -33,34 +38,17 @@ class DefaultsConfiguration implements ConfigurationInterface
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->root(self::ROOT_KEY);
 
-        $rootNode
+        $nodeBuilder = $rootNode
             ->info('The defaults values are common values that are reused by different actions.')
             ->addDefaultsIfNotSet()
-            ->children()
-                ->scalarNode('cache_directory_path')
-                    ->cannotBeEmpty()
-                    ->defaultValue('cache')
-                ->end()
-                ->arrayNode('logger')
-                    ->canBeDisabled()
-                    ->children()
-                        ->scalarNode('channel')
-                            ->cannotBeEmpty()
-                            ->defaultValue('drupal-debug')
-                        ->end()
-                        ->scalarNode('file_path')
-                            ->cannotBeEmpty()
-                            ->defaultValue('logs/drupal-debug.log')
-                        ->end()
-                    ->end()
-                ->end()
-                ->scalarNode('charset')
-                    ->defaultNull()
-                ->end()
-                ->scalarNode('file_link_format')
-                    ->defaultNull()
-                ->end()
-            ->end();
+            ->children();
+
+        self::addCacheDirectoryPathConfigurationNode($nodeBuilder, 'cache');
+        self::addLoggerConfigurationNode($nodeBuilder, 'drupal-debug', 'logs/drupal-debug.log');
+        self::addCharsetConfigurationNode($nodeBuilder, null);
+        self::addFileLinkFormatConfigurationNode($nodeBuilder, null);
+
+        $nodeBuilder->end();
 
         return $treeBuilder;
     }
