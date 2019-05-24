@@ -20,6 +20,14 @@ class WatchModulesHooksImplementationsOptions extends AbstractFileBackendDependa
     /**
      * {@inheritdoc}
      */
+    protected static function canHaveModuleFileResourceMasks(): bool
+    {
+        return true;
+    }
+
+    /**
+     * {@inheritdoc}
+     */
     protected static function getDefaultModuleFileResourceMasks(): array
     {
         return array(

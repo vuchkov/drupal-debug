@@ -87,8 +87,8 @@ class ActionRegistrar
         $configurationManager = ConfigurationManager::get();
 
         /** @var ActionMetadata $actionMetadata */
-        foreach (ActionMetadataManager::getInstance()->all() as $actionMetadata) {
-            $actionConfiguration = $configurationManager->getActionConfiguration($actionMetadata->getClass());
+        foreach (ActionMetadataManager::getInstance()->all() as $shortName => $actionMetadata) {
+            $actionConfiguration = $configurationManager->getActionConfiguration($shortName);
 
             if (!$actionConfiguration->isEnabled()) {
                 continue;
@@ -100,7 +100,7 @@ class ActionRegistrar
 
                 $options = $optionsStack->get($optionsClass);
                 if (!$options instanceof OptionsInterface) {
-                    $options = $optionsClass::getOptions($appRoot, $actionConfiguration->getProcessedConfiguration());
+                    $options = $optionsClass::getOptions($appRoot, $actionConfiguration);
                 }
 
                 $args[] = $options;

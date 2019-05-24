@@ -3,7 +3,6 @@
 namespace Ekino\Drupal\Debug\Configuration;
 
 use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
-use Monolog\Logger;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
@@ -22,7 +21,7 @@ trait FileLinkFormatConfigurationTrait
         return self::addFileLinkFormatConfigurationNode($nodeBuilder, $defaultsConfiguration->getFileLinkFormat());
     }
 
-    private static function getConfiguredFileLinkFormat(ActionConfiguration $actionConfiguration): ?Logger
+    private static function getConfiguredFileLinkFormat(ActionConfiguration $actionConfiguration): ?string
     {
         $processedConfiguration = $actionConfiguration->getProcessedConfiguration();
 

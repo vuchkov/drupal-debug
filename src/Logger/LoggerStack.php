@@ -1,11 +1,11 @@
 <?php
 
-namespace Ekino\Drupal\Debug;
+namespace Ekino\Drupal\Debug\Logger;
 
 use Monolog\Handler\StreamHandler;
 use Monolog\Logger;
 
-final class LoggerManager
+final class LoggerStack
 {
     /**
      * @var Logger[]
@@ -17,7 +17,7 @@ final class LoggerManager
         if (!isset(self::$instances[$key = $channel.$filePath])) {
             self::$instances[$key] = new Logger($channel, array(
                 new StreamHandler($filePath),
-            )));
+            ));
         }
 
         return self::$instances[$key];

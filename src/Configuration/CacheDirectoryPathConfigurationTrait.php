@@ -3,7 +3,6 @@
 namespace Ekino\Drupal\Debug\Configuration;
 
 use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
-use Monolog\Logger;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
@@ -23,7 +22,7 @@ trait CacheDirectoryPathConfigurationTrait
         return self::addCacheDirectoryPathConfigurationNode($nodeBuilder, $defaultsConfiguration->getCacheDirectoryPath());
     }
 
-    private static function getConfiguredCacheDirectoryPath(ActionConfiguration $actionConfiguration): ?Logger
+    private static function getConfiguredCacheDirectoryPath(ActionConfiguration $actionConfiguration): string
     {
         $processedConfiguration = $actionConfiguration->getProcessedConfiguration();
 

@@ -3,7 +3,7 @@
 namespace Ekino\Drupal\Debug\Configuration;
 
 use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
-use Ekino\Drupal\Debug\LoggerManager;
+use Ekino\Drupal\Debug\Logger\LoggerStack;
 use Monolog\Logger;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
@@ -42,6 +42,6 @@ trait LoggerConfigurationTrait
             return null;
         }
 
-        return LoggerManager::get($processedConfiguration['channel'], $processedConfiguration['file_path']);
+        return LoggerStack::get($processedConfiguration['logger']['channel'], $processedConfiguration['logger']['file_path']);
     }
 }

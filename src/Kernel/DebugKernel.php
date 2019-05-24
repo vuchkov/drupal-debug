@@ -14,7 +14,7 @@ declare(strict_types=1);
 namespace Ekino\Drupal\Debug\Kernel;
 
 use Drupal\Core\OriginalDrupalKernel;
-use Ekino\Drupal\Debug\Action\ActionManager;
+use Ekino\Drupal\Debug\Action\ActionRegistrar;
 use Ekino\Drupal\Debug\Kernel\Event\AfterAttachSyntheticEvent;
 use Ekino\Drupal\Debug\Kernel\Event\AfterContainerInitializationEvent;
 use Ekino\Drupal\Debug\Kernel\Event\AfterRequestPreHandleEvent;
@@ -34,9 +34,9 @@ class DebugKernel extends OriginalDrupalKernel
     private $eventDispatcher;
 
     /**
-     * @var ActionManager
+     * @var ActionRegistrar
      */
-    private $actionManager;
+    private $actionRegistrar;
 
     /**
      * @var array
@@ -68,9 +68,9 @@ class DebugKernel extends OriginalDrupalKernel
             $appRoot = static::guessApplicationRoot();
         }
 
-        $this->actionManager = $this->getActionManager($appRoot, $optionsStack instanceof OptionsStack ? $optionsStack : OptionsStack::create());
+        $this->actionRegistrar = $this->getActionRegistrar($appRoot, $optionsStack instanceof OptionsStack ? $optionsStack : OptionsStack::create());
 
-        $this->actionManager->addEventSubscriberActionsToEventDispatcher($this->eventDispatcher);
+        $this->actionRegistrar->addEventSubscriberActionsToEventDispatcher($this->eventDispatcher);
 
         $this->eventDispatcher->dispatch(DebugKernelEvents::ON_KERNEL_INSTANTIATION);
 
@@ -170,7 +170,7 @@ class DebugKernel extends OriginalDrupalKernel
     {
         $containerBuilder = parent::getContainerBuilder();
 
-        $this->actionManager->addCompilerPassActionsToContainerBuilder($containerBuilder);
+        $this->actionRegistrar->addCompilerPassActionsToContainerBuilder($containerBuilder);
 
         return $containerBuilder;
     }
@@ -187,11 +187,11 @@ class DebugKernel extends OriginalDrupalKernel
      * @param string       $appRoot
      * @param OptionsStack $optionsStack
      *
-     * @return ActionManager
+     * @return ActionRegistrar
      */
-    protected function getActionManager(string $appRoot, OptionsStack $optionsStack): ActionManager
+    protected function getActionRegistrar(string $appRoot, OptionsStack $optionsStack): ActionRegistrar
     {
-        return new ActionManager($appRoot, $optionsStack);
+        return new ActionRegistrar($appRoot, $optionsStack);
     }
 
     private function afterSettingsInitialization(): void

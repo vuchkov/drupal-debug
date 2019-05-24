@@ -20,11 +20,11 @@ ini_set('display_errors', '1');
 if (!\function_exists('_drupal_debug_initialize')) {
     function _drupal_debug_initialize(): void
     {
-        $configurationManager = ConfigurationManager::get();
+        $configurationManager = ConfigurationManager::getInstance();
 
         $substituteOriginalDrupalKernelConfiguration = $configurationManager->getSubstituteOriginalDrupalKernelConfiguration();
         if ($substituteOriginalDrupalKernelConfiguration->isEnabled()) {
-            OriginalDrupalKernelHelper::substitute($substituteOriginalDrupalKernelConfiguration->getClassLoader(), $substituteOriginalDrupalKernelConfiguration->getCacheDirectory());
+            OriginalDrupalKernelHelper::substitute($substituteOriginalDrupalKernelConfiguration->getClassLoader(), $substituteOriginalDrupalKernelConfiguration->getCacheDirectoryPath());
         }
     }
 }

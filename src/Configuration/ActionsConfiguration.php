@@ -20,7 +20,7 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
-class ActionsConfiguration implements ConfigurationInterface
+class ActionsConfiguration extends AbstractConfiguration
 {
     public const ROOT_KEY = 'actions';
 
@@ -44,9 +44,8 @@ class ActionsConfiguration implements ConfigurationInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfigTreeBuilder(): TreeBuilder
+    public function getArrayNodeDefinition(TreeBuilder $treeBuilder): ArrayNodeDefinition
     {
-        $treeBuilder = new TreeBuilder();
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->root(self::ROOT_KEY);
         $nodeBuilder =$rootNode
@@ -70,6 +69,6 @@ class ActionsConfiguration implements ConfigurationInterface
         $rootNode
             ->end();
 
-        return $treeBuilder;
+        return $rootNode;
     }
 }

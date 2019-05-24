@@ -18,7 +18,7 @@ use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
-class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterface
+class SubstituteOriginalDrupalKernelConfiguration extends AbstractConfiguration
 {
     /**
      * @var string
@@ -35,9 +35,8 @@ class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterf
     /**
      * {@inheritdoc}
      */
-    public function getConfigTreeBuilder(): TreeBuilder
+    public function getArrayNodeDefinition(TreeBuilder $treeBuilder): ArrayNodeDefinition
     {
-        $treeBuilder = new TreeBuilder();
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->root(self::ROOT_KEY);
 
@@ -55,6 +54,6 @@ class SubstituteOriginalDrupalKernelConfiguration implements ConfigurationInterf
                 ->end()
           ->end();
 
-        return $treeBuilder;
+        return $rootNode;
     }
 }

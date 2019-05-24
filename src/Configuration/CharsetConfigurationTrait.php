@@ -3,7 +3,6 @@
 namespace Ekino\Drupal\Debug\Configuration;
 
 use Ekino\Drupal\Debug\Configuration\Model\ActionConfiguration;
-use Monolog\Logger;
 use Symfony\Component\Config\Definition\Builder\NodeBuilder;
 use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
@@ -22,7 +21,7 @@ trait CharsetConfigurationTrait
         return self::addCharsetConfigurationNode($nodeBuilder, $defaultsConfiguration->getCharset());
     }
 
-    private static function getConfiguredCharset(ActionConfiguration $actionConfiguration): ?Logger
+    private static function getConfiguredCharset(ActionConfiguration $actionConfiguration): ?string
     {
         $processedConfiguration = $actionConfiguration->getProcessedConfiguration();
 

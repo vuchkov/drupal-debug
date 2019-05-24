@@ -14,10 +14,11 @@ declare(strict_types=1);
 namespace Ekino\Drupal\Debug\Configuration;
 
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
+use Symfony\Component\Config\Definition\Builder\NodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 
-class DefaultsConfiguration implements ConfigurationInterface
+class DefaultsConfiguration extends AbstractConfiguration
 {
     use CacheDirectoryPathConfigurationTrait;
     use LoggerConfigurationTrait;
@@ -32,9 +33,8 @@ class DefaultsConfiguration implements ConfigurationInterface
     /**
      * {@inheritdoc}
      */
-    public function getConfigTreeBuilder(): TreeBuilder
+    public function getArrayNodeDefinition(TreeBuilder $treeBuilder): ArrayNodeDefinition
     {
-        $treeBuilder = new TreeBuilder();
         /** @var ArrayNodeDefinition $rootNode */
         $rootNode = $treeBuilder->root(self::ROOT_KEY);
 
@@ -50,6 +50,6 @@ class DefaultsConfiguration implements ConfigurationInterface
 
         $nodeBuilder->end();
 
-        return $treeBuilder;
+        return $rootNode;
     }
 }
