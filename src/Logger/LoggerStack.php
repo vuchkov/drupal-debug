@@ -12,7 +12,7 @@ final class LoggerStack
      */
     private static $instances = [];
 
-    public static function get(string $channel, string $filePath): Logger
+    public static function getInstance(string $channel, string $filePath): Logger
     {
         if (!isset(self::$instances[$key = $channel.$filePath])) {
             self::$instances[$key] = new Logger($channel, array(

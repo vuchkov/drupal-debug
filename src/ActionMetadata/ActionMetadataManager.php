@@ -180,6 +180,11 @@ class ActionMetadataManager
         return $this;
     }
 
+    public function get(string $shortName): ActionMetadata
+    {
+
+    }
+
     public function isCoreAction(string $shortName): bool
     {
         return isset(self::CORE_ACTIONS[$shortName]);

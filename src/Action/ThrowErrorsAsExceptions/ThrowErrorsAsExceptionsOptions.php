@@ -75,6 +75,8 @@ class ThrowErrorsAsExceptionsOptions implements OptionsInterface
     {
         $processedConfiguration = $actionConfiguration->getProcessedConfiguration();
 
+        //todo : evaluate les const E_* passé en string dans la conf ?
+
         return new self($processedConfiguration['levels'], self::getConfiguredLogger($actionConfiguration));
     }
 }

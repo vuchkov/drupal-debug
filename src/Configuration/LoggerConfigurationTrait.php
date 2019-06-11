@@ -42,6 +42,6 @@ trait LoggerConfigurationTrait
             return null;
         }
 
-        return LoggerStack::get($processedConfiguration['logger']['channel'], $processedConfiguration['logger']['file_path']);
+        return LoggerStack::getInstance($processedConfiguration['logger']['channel'], $processedConfiguration['logger']['file_path']);
     }
 }

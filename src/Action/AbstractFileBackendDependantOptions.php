@@ -118,7 +118,7 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
                 ->booleanNode('include_defaults')
                     ->defaultTrue()
                 ->end()
-                ->arrayNode('file_resource_masks')
+                ->arrayNode('custom_file_resource_masks')
                     ->scalarPrototype()
                 ->end();
 
@@ -143,14 +143,14 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
 
         if (static::canHaveModuleFileResourceMasks()) {
             $includeDefaults = ($canHaveBothExtensionTypeFileResourceMasks = self::canHaveBothExtensionTypeFileResourceMasks()) ? $processedConfiguration['module']['include_defaults'] : $processedConfiguration['include_defaults'];
-            $fileResourceMasks = $canHaveBothExtensionTypeFileResourceMasks ? $processedConfiguration['module']['file_resource_masks'] : $processedConfiguration['file_resource_masks'];
+            $customFileResourceMasks = $canHaveBothExtensionTypeFileResourceMasks ? $processedConfiguration['module']['custom_file_resource_masks'] : $processedConfiguration['custom_file_resource_masks'];
 
-            $resources = self::getModuleResources($customExtensionDiscovery->getCustomModules(), $includeDefaults, $fileResourceMasks);
+            $resources = self::getModuleResources($customExtensionDiscovery->getCustomModules(), $includeDefaults, $customFileResourceMasks);
         }
 
         if (static::canHaveThemeFileResourceMasks()) {
             $includeDefaults = ($canHaveBothExtensionTypeFileResourceMasks ?? ($canHaveBothExtensionTypeFileResourceMasks = self::canHaveBothExtensionTypeFileResourceMasks())) ? $processedConfiguration['theme']['include_defaults'] : $processedConfiguration['include_defaults'];
-            $fileResourceMasks = $canHaveBothExtensionTypeFileResourceMasks ? $processedConfiguration['theme']['file_resource_masks'] : $processedConfiguration['file_resource_masks'];
+            $customFileResourceMasks = $canHaveBothExtensionTypeFileResourceMasks ? $processedConfiguration['theme']['custom_file_resource_masks'] : $processedConfiguration['custom_file_resource_masks'];
 
             $resources = array_merge($resources, self::getThemeResources($customExtensionDiscovery->getCustomThemes(), $includeDefaults, $fileResourceMasks));
         }

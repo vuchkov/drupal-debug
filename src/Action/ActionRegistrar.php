@@ -34,16 +34,17 @@ class ActionRegistrar
      */
     private $compilerPassActions;
 
-    /**
-     * @param string       $appRoot
-     * @param OptionsStack $optionsStack
-     */
-    public function __construct(string $appRoot, OptionsStack $optionsStack)
+    public function __construct(
+        string $appRoot,
+        ActionMetadataManager $actionMetadataManager,
+        ConfigurationManager $configurationManager,
+        OptionsStack $optionsStack
+    )
     {
         $this->eventSubscriberActions = array();
         $this->compilerPassActions = array();
 
-        foreach ($this->getActions($appRoot, $optionsStack) as $action) {
+        foreach ($this->getActions($appRoot, $actionMetadataManager, $configurationManager, $optionsStack) as $action) {
             if ($action instanceof EventSubscriberActionInterface) {
                 $this->eventSubscriberActions[] = $action;
             }
@@ -80,14 +81,17 @@ class ActionRegistrar
      *
      * @return ActionInterface[]
      */
-    private function getActions(string $appRoot, OptionsStack $optionsStack): array
+    private function getActions(
+        string $appRoot,
+        ActionMetadataManager $actionMetadataManager,
+        ConfigurationManager $configurationManager,
+        OptionsStack $optionsStack
+    ): array
     {
         $actions = array();
 
-        $configurationManager = ConfigurationManager::get();
-
         /** @var ActionMetadata $actionMetadata */
-        foreach (ActionMetadataManager::getInstance()->all() as $shortName => $actionMetadata) {
+        foreach ($actionMetadataManager->all() as $shortName => $actionMetadata) {
             $actionConfiguration = $configurationManager->getActionConfiguration($shortName);
 
             if (!$actionConfiguration->isEnabled()) {

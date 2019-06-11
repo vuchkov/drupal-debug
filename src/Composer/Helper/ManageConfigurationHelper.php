@@ -28,6 +28,7 @@ use Symfony\Component\Filesystem\Exception\IOException;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Yaml\Dumper;
 use Symfony\Component\Yaml\Parser;
+use Ekino\Drupal\Debug\Configuration\Model\DefaultsConfiguration as DefaultsConfigurationModel;
 
 class ManageConfigurationHelper
 {
@@ -175,12 +176,12 @@ class ManageConfigurationHelper
      */
     private function getReferenceConfigurationContent(): array
     {
-        return (new Parser())->parse((new YamlReferenceDumper())->dump(new class() implements ConfigurationInterface {
+        return (new Parser())->parse((new YamlReferenceDumper())->dump(new class($this->configurationManager) implements ConfigurationInterface {
             private $configurationManager;
 
-            public function __construct()
+            public function __construct(ConfigurationManager $configurationManager)
             {
-                $this->configurationManager = ConfigurationManager::getInstance();
+                $this->configurationManager = $configurationManager;
             }
 
             /**
@@ -195,7 +196,7 @@ class ManageConfigurationHelper
                     ->info('This is the drupal-debug configuration file.')
                     ->children()
                         ->append((new DefaultsConfiguration())->getArrayNodeDefinition(new TreeBuilder()))
-                        ->append((new ActionsConfiguration((new ActionMetadataManager())->all(), $defaultsConfiguration = $this->configurationManager->getDefaultsConfiguration()))->getArrayNodeDefinition(new TreeBuilder()))
+                        ->append((new ActionsConfiguration((new ActionMetadataManager())->all(), $defaultsConfiguration = new DefaultsConfigurationModel($this->configurationManager->getProcessedDefaultsConfiguration([]))))->getArrayNodeDefinition(new TreeBuilder()))
                         ->append((new SubstituteOriginalDrupalKernelConfiguration($defaultsConfiguration))->getArrayNodeDefinition(new TreeBuilder()))
                     ->end();
                 return $treeBuilder;
@@ -221,7 +222,7 @@ class ManageConfigurationHelper
     private function dumpConfigurationFile(string $configurationFilePath, array $configurationFileContent, bool $displayLocation): bool
     {
         try {
-            (new Filesystem())->dumpFile($configurationFilePath, (new Dumper())->dump($configurationFileContent, 4));
+            (new Filesystem())->dumpFile($configurationFilePath, (new Dumper())->dump($configurationFileContent, 5));
         } catch (IOException $e) {
             $this->IO->writeError('<error>The drupal-debug configuration file could not be dumped.</error>');
 

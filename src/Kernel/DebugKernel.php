@@ -15,6 +15,8 @@ namespace Ekino\Drupal\Debug\Kernel;
 
 use Drupal\Core\OriginalDrupalKernel;
 use Ekino\Drupal\Debug\Action\ActionRegistrar;
+use Ekino\Drupal\Debug\ActionMetadata\ActionMetadataManager;
+use Ekino\Drupal\Debug\Configuration\ConfigurationManager;
 use Ekino\Drupal\Debug\Kernel\Event\AfterAttachSyntheticEvent;
 use Ekino\Drupal\Debug\Kernel\Event\AfterContainerInitializationEvent;
 use Ekino\Drupal\Debug\Kernel\Event\AfterRequestPreHandleEvent;
@@ -32,6 +34,8 @@ class DebugKernel extends OriginalDrupalKernel
      * @var EventDispatcher
      */
     private $eventDispatcher;
+
+    private $configurationManager;
 
     /**
      * @var ActionRegistrar
@@ -68,7 +72,12 @@ class DebugKernel extends OriginalDrupalKernel
             $appRoot = static::guessApplicationRoot();
         }
 
-        $this->actionRegistrar = $this->getActionRegistrar($appRoot, $optionsStack instanceof OptionsStack ? $optionsStack : OptionsStack::create());
+        $this->actionRegistrar = $this->getActionRegistrar(
+            $appRoot,
+            ActionMetadataManager::getInstance(),
+            $this->configurationManager = ConfigurationManager::getInstance(),
+            $optionsStack instanceof OptionsStack ? $optionsStack : OptionsStack::create()
+        );
 
         $this->actionRegistrar->addEventSubscriberActionsToEventDispatcher($this->eventDispatcher);
 
@@ -114,7 +123,15 @@ class DebugKernel extends OriginalDrupalKernel
     {
         parent::preHandle($request);
 
-        $this->eventDispatcher->dispatch(DebugKernelEvents::AFTER_REQUEST_PRE_HANDLE, new AfterRequestPreHandleEvent($this->container, $this->enabledModules, $this->enabledThemes));
+        $this->eventDispatcher->dispatch(
+            DebugKernelEvents::AFTER_REQUEST_PRE_HANDLE,
+            new AfterRequestPreHandleEvent(
+                $this->configurationManager->doesConfigurationChanged(),
+                $this->container,
+                $this->enabledModules,
+                $this->enabledThemes
+            )
+        );
     }
 
     /**
@@ -134,7 +151,15 @@ class DebugKernel extends OriginalDrupalKernel
     {
         $container = parent::initializeContainer();
 
-        $this->eventDispatcher->dispatch(DebugKernelEvents::AFTER_CONTAINER_INITIALIZATION, new AfterContainerInitializationEvent($container, $this->enabledModules, $this->enabledThemes));
+        $this->eventDispatcher->dispatch(
+            DebugKernelEvents::AFTER_CONTAINER_INITIALIZATION,
+            new AfterContainerInitializationEvent(
+                $this->configurationManager->doesConfigurationChanged(),
+                $container,
+                $this->enabledModules,
+                $this->enabledThemes
+            )
+        );
 
         return $container;
     }
@@ -158,7 +183,15 @@ class DebugKernel extends OriginalDrupalKernel
     {
         $container = parent::attachSynthetic($container);
 
-        $this->eventDispatcher->dispatch(DebugKernelEvents::AFTER_ATTACH_SYNTHETIC, new AfterAttachSyntheticEvent($container, $this->enabledModules, $this->enabledThemes));
+        $this->eventDispatcher->dispatch(
+            DebugKernelEvents::AFTER_ATTACH_SYNTHETIC,
+            new AfterAttachSyntheticEvent(
+                $this->configurationManager->doesConfigurationChanged(),
+                $container,
+                $this->enabledModules,
+                $this->enabledThemes
+            )
+        );
 
         return $container;
     }
@@ -183,15 +216,14 @@ class DebugKernel extends OriginalDrupalKernel
         return new EventDispatcher();
     }
 
-    /**
-     * @param string       $appRoot
-     * @param OptionsStack $optionsStack
-     *
-     * @return ActionRegistrar
-     */
-    protected function getActionRegistrar(string $appRoot, OptionsStack $optionsStack): ActionRegistrar
+    protected function getActionRegistrar(
+        string $appRoot,
+        ActionMetadataManager $actionMetadataManager,
+        ConfigurationManager $configurationManager,
+        OptionsStack $optionsStack
+    ): ActionRegistrar
     {
-        return new ActionRegistrar($appRoot, $optionsStack);
+        return new ActionRegistrar($appRoot, $actionMetadataManager, $configurationManager, $optionsStack);
     }
 
     private function afterSettingsInitialization(): void
@@ -205,6 +237,13 @@ class DebugKernel extends OriginalDrupalKernel
             $this->enabledThemes = \array_keys($coreExtensionConfig['theme']);
         }
 
-        $this->eventDispatcher->dispatch(DebugKernelEvents::AFTER_SETTINGS_INITIALIZATION, new AfterSettingsInitializationEvent($this->enabledModules, $this->enabledThemes));
+        $this->eventDispatcher->dispatch(
+            DebugKernelEvents::AFTER_SETTINGS_INITIALIZATION,
+            new AfterSettingsInitializationEvent(
+                $this->configurationManager->doesConfigurationChanged(),
+                $this->enabledModules,
+                $this->enabledThemes
+            )
+        );
     }
 }

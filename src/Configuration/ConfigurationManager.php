@@ -68,6 +68,11 @@ class ConfigurationManager
     private $propertyAccessor;
 
     /**
+     * @var bool
+     */
+    private $configurationChanged;
+
+    /**
      * @var string
      */
     private $configurationFilePath;
@@ -96,7 +101,7 @@ class ConfigurationManager
      * @var ActionConfiguration[]
      */
     private $actionsConfigurations;
-
+    
     private function __construct()
     {
         $configurationCacheDirectory = \getenv(self::CONFIGURATION_CACHE_DIRECTORY_ENVIRONMENT_VARIABLE_NAME);
@@ -115,20 +120,20 @@ class ConfigurationManager
             new FileResource(\sprintf('%s/ConfigurationManager.php', __DIR__)),
         )));
 
-        if (0 && $fileCache->isFresh() && !empty($data = $fileCache->getData())) {
+        if (!($this->configurationChanged = !$fileCache->isFresh() || empty($data = $fileCache->getData()))) {
             list(
                 'defaults' => $this->defaultsConfiguration,
                 'substitute_original_drupal_kernel' => $this->substituteOriginalDrupalKernelConfiguration,
                 'actions' => $this->actionsConfigurations,
-            ) = \array_map(static function ($serializedConfiguration): array {
+            ) = \array_map(static function ($serializedConfiguration) {
                 return \unserialize($serializedConfiguration);
             }, $data);
         } else {
             $configurationFileContent = $this->getConfigurationFileContent();
 
-            $this->setDefaultsConfiguration($configurationFileContent);
-            $this->setSubstituteOriginalDrupalKernelConfiguration($configurationFileContent, $defaultsConfiguration = $this->getDefaultsConfiguration());
-            $this->setActionsConfigurations($configurationFileContent, $defaultsConfiguration);
+            $this->setDefaultsConfiguration($configurationFileContent[self::ROOT_KEY][DefaultsConfiguration::ROOT_KEY] ?? []);
+            $this->setSubstituteOriginalDrupalKernelConfiguration($configurationFileContent[self::ROOT_KEY][SubstituteOriginalDrupalKernelConfiguration::ROOT_KEY] ?? [], $defaultsConfiguration = $this->getDefaultsConfiguration());
+            $this->setActionsConfigurations($configurationFileContent[self::ROOT_KEY][ActionsConfiguration::ROOT_KEY] ?? [], $defaultsConfiguration);
 
             $fileCache->invalidate();
             $fileCache->write(array(
@@ -209,19 +214,52 @@ class ConfigurationManager
         $actionMetadataManager = ActionMetadataManager::getInstance();
         $actionMetadataFactory = new ActionMetadataFactory();
 
-        foreach ($configurationFileContent[ActionsConfiguration::ROOT_KEY] ?? [] as $shortName => $config) {
+        foreach ($configurationFileContent as $shortName => $config) {
+            if ($actionMetadataManager->isCoreAction($shortName)) {
+                continue;
+            }
+
             $actionMetadataManager->add($actionMetadataFactory->create($shortName));
         }
 
         $processedActionsConfiguration = $this->getProcessedActionsConfiguration($configurationFileContent, $actionMetadataManager->all(), $defaultsConfiguration);
-        $propertyPaths = [];
+        $propertyPaths = array_map(static function (array $elements): string {
+            return sprintf('[%s]', implode('][', $elements));
+        }, [
+            [
+                'display_pretty_exceptions',
+                'logger',
+                'file_path',
+            ],
+            [
+                'throw_errors_as_exceptions',
+                'logger',
+                'file_path',
+            ],
+            [
+                'watch_container_definitions',
+                'cache_directory_path',
+            ],
+            [
+                'watch_modules_hooks_implementations',
+                'cache_directory_path',
+            ],
+            [
+                'watch_routing_definitions',
+                'cache_directory_path',
+            ],
+        ]);
 
-        $buildPropertyPathsRecursively = static function (array $array, array $previous = []) use (&$buildPropertyPathsRecursively, &$propertyPaths): void {
+        $buildPropertyPathsRecursively = static function (array $array, array $previous) use (&$buildPropertyPathsRecursively, &$propertyPaths): void {
             foreach ($array as $key => $row) {
-                if (is_string($row) && 1 === preg_match('/_path$/i', $row)) {
-                    $propertyPaths[] = sprintf('[%s]', implode('][', $previous));
+                if (is_string($row) && 1 === preg_match('/_path$/i', $key)) {
+                    $propertyPaths[] = sprintf('[%s]', implode('][', array_merge($previous, [
+                        $key,
+                    ])));
                 } elseif (is_array($row)) {
-                    $buildPropertyPathsRecursively($row, $previous[] = $key);
+                    $buildPropertyPathsRecursively($row, array_merge($previous, [
+                        $key,
+                    ]));
                 }
             }
         };
@@ -231,7 +269,9 @@ class ConfigurationManager
                 continue;
             }
 
-            $buildPropertyPathsRecursively($processedActionsConfiguration);
+            $buildPropertyPathsRecursively($processedActionConfiguration, [
+                $shortName,
+            ]);
         }
 
         foreach (
@@ -252,6 +292,11 @@ class ConfigurationManager
     public function doesConfigurationFilePathExists(): bool
     {
         return $this->configurationFilePathExists;
+    }
+
+    public function doesConfigurationChanged(): bool
+    {
+        return $this->configurationChanged;
     }
 
     private function setConfigurationFilePathInfo(): void
@@ -314,10 +359,15 @@ class ConfigurationManager
         return $content;
     }
 
-    private function getProcessedDefaultsConfiguration(array $configurationFileContent): array
+    /**
+     * @internal
+     */
+    public function getProcessedDefaultsConfiguration(array $configurationFileContent): array
     {
         return $this->getProcessedConfiguration(
-            $configurationFileContent,
+            [
+                DefaultsConfiguration::ROOT_KEY => $configurationFileContent,
+            ],
             new DefaultsConfiguration()
         );
     }
@@ -325,7 +375,9 @@ class ConfigurationManager
     private function getProcessedSubstituteOriginalDrupalKernelConfiguration(array $configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): array
     {
         return $this->getProcessedConfiguration(
-            $configurationFileContent,
+            [
+                SubstituteOriginalDrupalKernelConfiguration::ROOT_KEY => $configurationFileContent,
+            ],
             new SubstituteOriginalDrupalKernelConfiguration($defaultsConfiguration)
         );
     }
@@ -333,7 +385,9 @@ class ConfigurationManager
     private function getProcessedActionsConfiguration(array $configurationFileContent, array $actionMetadata, DefaultsConfigurationModel $defaultsConfiguration): array
     {
         return $this->getProcessedConfiguration(
-            $configurationFileContent,
+            [
+                ActionsConfiguration::ROOT_KEY => $configurationFileContent,
+            ],
             new ActionsConfiguration($actionMetadata, $defaultsConfiguration)
         );
     }

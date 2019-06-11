@@ -34,9 +34,4 @@ class ActionMetadata
     {
         return $this->shortName;
     }
-
-    public function getClass(): string
-    {
-        return $this->reflectionClass->getName();
-    }
 }
