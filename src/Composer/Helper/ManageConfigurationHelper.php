@@ -21,6 +21,7 @@ use Ekino\Drupal\Debug\Configuration\ActionsConfiguration;
 use Ekino\Drupal\Debug\Configuration\ConfigurationManager;
 use Ekino\Drupal\Debug\Configuration\DefaultsConfiguration;
 use Ekino\Drupal\Debug\Configuration\SubstituteOriginalDrupalKernelConfiguration;
+use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Symfony\Component\Config\Definition\Builder\TreeBuilder;
 use Symfony\Component\Config\Definition\ConfigurationInterface;
 use Symfony\Component\Config\Definition\Dumper\YamlReferenceDumper;
@@ -143,8 +144,10 @@ class ManageConfigurationHelper
      */
     public function toggleOriginalDrupalKernelSubstitution(bool $enabled): bool
     {
+        $configurationFilePath = $this->configurationManager->getConfigurationFilePath();
+
         if ($this->configurationManager->doesConfigurationFilePathExists()) {
-            $configurationFileContent = $this->getCurrentConfigurationContent($configurationFilePath = $this->configurationManager->getConfigurationFilePath());
+            $configurationFileContent = $this->getCurrentConfigurationContent($configurationFilePath);
             if (\is_array($configurationFileContent) && isset($configurationFileContent['drupal-debug'])) {
                 if (isset($configurationFileContent['drupal-debug']['substitute_original_drupal_kernel']) && \is_array($configurationFileContent['drupal-debug']['substitute_original_drupal_kernel'])) {
                     $configurationFileContent['drupal-debug']['substitute_original_drupal_kernel']['enabled'] = $enabled;
@@ -193,7 +196,6 @@ class ManageConfigurationHelper
                 /** @var ArrayNodeDefinition $rootNode */
                 $rootNode = $treeBuilder->root(ConfigurationManager::ROOT_KEY);
                 $rootNode
-                    ->info('This is the drupal-debug configuration file.')
                     ->children()
                         ->append((new DefaultsConfiguration())->getArrayNodeDefinition(new TreeBuilder()))
                         ->append((new ActionsConfiguration((new ActionMetadataManager())->all(), $defaultsConfiguration = new DefaultsConfigurationModel($this->configurationManager->getProcessedDefaultsConfiguration([]))))->getArrayNodeDefinition(new TreeBuilder()))

@@ -30,11 +30,6 @@ class SubstituteOriginalDrupalKernelConfigurationTest extends TestCase
     /**
      * @var string
      */
-    private const CONFIGURATION_FILE_PATH = __DIR__.'/fixtures/drupal-debug.yml';
-
-    /**
-     * @var string
-     */
     private const VALID_AUTOLOAD_FILE_PATH = __DIR__.'/fixtures/valid_autoload.php';
 
     /**
@@ -94,41 +89,22 @@ class SubstituteOriginalDrupalKernelConfigurationTest extends TestCase
         $this->assertSame($classLoader, $substituteOriginalDrupalKernelConfiguration->getClassLoader());
     }
 
-    public function testGetCacheDirectoryWhenTheSubstitutionIsNotEnabled(): void
+    public function testGetCacheDirectoryPathWhenTheSubstitutionIsNotEnabled(): void
     {
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('The cache directory getter should not be called if the original DrupalKernel substitution is disabled.');
 
         (new SubstituteOriginalDrupalKernelConfiguration(array(
             'enabled' => false,
-        )))->getCacheDirectory();
+        )))->getCacheDirectoryPath();
     }
 
-    /**
-     * @runInSeparateProcess
-     */
-    public function testGetCacheDirectoryWhenItFallBacksOnItsDefaultValue(): void
-    {
-        $this->clearCache();
-
-        \putenv(\sprintf('%s=%s', ConfigurationManager::CONFIGURATION_CACHE_DIRECTORY_ENVIRONMENT_VARIABLE_NAME, self::CACHE_DIRECTORY_PATH));
-        \putenv(\sprintf('%s=%s', ConfigurationManager::CONFIGURATION_FILE_PATH_ENVIRONMENT_VARIABLE_NAME, self::CONFIGURATION_FILE_PATH));
-
-        ConfigurationManager::initialize();
-
-        $this->assertSame(\sprintf('%s/fixtures/cache', __DIR__), (new SubstituteOriginalDrupalKernelConfiguration(array(
-            'enabled' => true,
-        )))->getCacheDirectory());
-
-        $this->clearCache();
-    }
-
-    public function testGetCacheDirectory(): void
+    public function testGetCacheDirectoryPath(): void
     {
         $this->assertSame('fcy', (new SubstituteOriginalDrupalKernelConfiguration(array(
             'enabled' => true,
-            'cache_directory' => 'fcy',
-        )))->getCacheDirectory());
+            'cache_directory_path' => 'fcy',
+        )))->getCacheDirectoryPath());
     }
 
     public function testSerialize(): void

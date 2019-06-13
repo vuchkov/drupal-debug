@@ -44,15 +44,4 @@ class ThrowErrorsAsExceptionsOptionsTest extends TestCase
             array($this->createMock(LoggerInterface::class)),
         );
     }
-
-    public function testGetDefault(): void
-    {
-        $defaultsConfiguration = $this->createMock(DefaultsConfiguration::class);
-        $defaultsConfiguration
-            ->expects($this->atLeastOnce())
-            ->method('getLogger')
-            ->willReturn(null);
-
-        $this->assertEquals(new ThrowErrorsAsExceptionsOptions(E_ALL & ~E_WARNING & ~E_USER_WARNING, null), ThrowErrorsAsExceptionsOptions::getDefault('/foo', $defaultsConfiguration));
-    }
 }

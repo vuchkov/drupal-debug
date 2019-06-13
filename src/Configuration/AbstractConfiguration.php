@@ -12,7 +12,7 @@ abstract class AbstractConfiguration implements ConfigurationInterface
      */
     public final function getConfigTreeBuilder(): TreeBuilder
     {
-        $this->getArrayNodeDefinition($treeBuilder = new TreeBuilder(), true);
+        $this->getArrayNodeDefinition($treeBuilder = new TreeBuilder());
 
         return $treeBuilder;
     }

@@ -158,7 +158,7 @@ class ConfigurationManager
         return $this->defaultsConfiguration;
     }
 
-    private function setDefaultsConfiguration(array $configurationFileContent): void
+    private function setDefaultsConfiguration($configurationFileContent): void
     {
         $this->defaultsConfiguration = new DefaultsConfigurationModel(
             $this->makeRelativePathsAbsolutes(
@@ -183,7 +183,7 @@ class ConfigurationManager
         return $this->substituteOriginalDrupalKernelConfiguration;
     }
 
-    private function setSubstituteOriginalDrupalKernelConfiguration(array $configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): void
+    private function setSubstituteOriginalDrupalKernelConfiguration($configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): void
     {
         $this->substituteOriginalDrupalKernelConfiguration = new SubstituteOriginalDrupalKernelConfigurationModel(
             $this->makeRelativePathsAbsolutes(
@@ -207,7 +207,7 @@ class ConfigurationManager
         return $this->actionsConfigurations[$class];
     }
 
-    private function setActionsConfigurations(array $configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): void
+    private function setActionsConfigurations($configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): void
     {
         $this->actionsConfigurations = array();
 
@@ -325,10 +325,10 @@ class ConfigurationManager
             }
         }
 
-        $possibleConfigurationFilePaths = array(
+        $possibleConfigurationFilePaths = array_unique(array(
             $possibleConfigurationFilePath,
             \rtrim($possibleConfigurationFilePath, '.dist'),
-        );
+        ));
 
         $exists = false;
         foreach ($possibleConfigurationFilePaths as $possibleConfigurationFilePath) {
@@ -362,7 +362,7 @@ class ConfigurationManager
     /**
      * @internal
      */
-    public function getProcessedDefaultsConfiguration(array $configurationFileContent): array
+    public function getProcessedDefaultsConfiguration($configurationFileContent): array
     {
         return $this->getProcessedConfiguration(
             [
@@ -372,7 +372,7 @@ class ConfigurationManager
         );
     }
 
-    private function getProcessedSubstituteOriginalDrupalKernelConfiguration(array $configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): array
+    private function getProcessedSubstituteOriginalDrupalKernelConfiguration($configurationFileContent, DefaultsConfigurationModel $defaultsConfiguration): array
     {
         return $this->getProcessedConfiguration(
             [
@@ -382,7 +382,7 @@ class ConfigurationManager
         );
     }
 
-    private function getProcessedActionsConfiguration(array $configurationFileContent, array $actionMetadata, DefaultsConfigurationModel $defaultsConfiguration): array
+    private function getProcessedActionsConfiguration($configurationFileContent, array $actionMetadata, DefaultsConfigurationModel $defaultsConfiguration): array
     {
         return $this->getProcessedConfiguration(
             [

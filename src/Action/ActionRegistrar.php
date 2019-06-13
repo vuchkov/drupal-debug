@@ -78,6 +78,8 @@ class ActionRegistrar
     /**
      * @param string       $appRoot
      * @param OptionsStack $optionsStack
+     * @param ActionMetadataManager $actionMetadataManager
+     * @param ConfigurationManager $configurationManager
      *
      * @return ActionInterface[]
      */
@@ -110,7 +112,9 @@ class ActionRegistrar
                 $args[] = $options;
             }
 
-            $actions[] = $actionMetadata->getReflectionClass()->newInstanceArgs($args);
+            /** @var ActionInterface $action */
+            $action = $actionMetadata->getReflectionClass()->newInstanceArgs($args);
+            $actions[] = $action;
         }
 
         return $actions;

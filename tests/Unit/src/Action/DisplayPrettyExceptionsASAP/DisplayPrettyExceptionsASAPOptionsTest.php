@@ -54,19 +54,4 @@ class DisplayPrettyExceptionsASAPOptionsTest extends TestCase
             array('myide://open?url=file://%%f&line=%%l'),
         );
     }
-
-    public function testGetDefault(): void
-    {
-        $defaultsConfiguration = $this->createMock(DefaultsConfiguration::class);
-        $defaultsConfiguration
-            ->expects($this->atLeastOnce())
-            ->method('getCharset')
-            ->willReturn('utf-8');
-        $defaultsConfiguration
-            ->expects($this->atLeastOnce())
-            ->method('getFileLinkFormat')
-            ->willReturn(null);
-
-        $this->assertEquals(new DisplayPrettyExceptionsASAPOptions('utf-8', null), DisplayPrettyExceptionsASAPOptions::getDefault('/foo', $defaultsConfiguration));
-    }
 }

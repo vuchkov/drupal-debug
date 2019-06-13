@@ -152,7 +152,7 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
             $includeDefaults = ($canHaveBothExtensionTypeFileResourceMasks ?? ($canHaveBothExtensionTypeFileResourceMasks = self::canHaveBothExtensionTypeFileResourceMasks())) ? $processedConfiguration['theme']['include_defaults'] : $processedConfiguration['include_defaults'];
             $customFileResourceMasks = $canHaveBothExtensionTypeFileResourceMasks ? $processedConfiguration['theme']['custom_file_resource_masks'] : $processedConfiguration['custom_file_resource_masks'];
 
-            $resources = array_merge($resources, self::getThemeResources($customExtensionDiscovery->getCustomThemes(), $includeDefaults, $fileResourceMasks));
+            $resources = array_merge($resources, self::getThemeResources($customExtensionDiscovery->getCustomThemes(), $includeDefaults, $customFileResourceMasks));
         }
 
         return new static(
@@ -196,7 +196,9 @@ abstract class AbstractFileBackendDependantOptions implements OptionsInterface
     }
 
     /**
-     * @param CustomTheme[]  $customThemes
+     * @param CustomModule[] $customModules
+     * @param bool $includeDefaults
+     * @param string[] $fileResourceMasks
      *
      * @return CustomExtensionFileResource[]
      */

@@ -23,7 +23,6 @@ class DisableCSSAggregationActionTest extends AbstractActionTestCase
      */
     protected function doTestInitialBehaviorWithDrupalKernel(Client $client): void
     {
-        return;
         $this->assertSame(1, $this->countStylesheetLinks($client));
     }
 
@@ -33,7 +32,6 @@ class DisableCSSAggregationActionTest extends AbstractActionTestCase
     protected function doTestTargetedBehaviorWithDebugKernel(Client $client): void
     {
         $client->request('GET', '/');
-        dump($client->getResponse()); die();
 
         $this->assertGreaterThan(10, $this->countStylesheetLinks($client));
     }

@@ -76,30 +76,6 @@ class AbstractFileBackendDependantOptionsTest extends TestCase
         );
     }
 
-    public function testGetDefault(): void
-    {
-        $customModuleRootPath = \sprintf('%s/modules/module_ccc', self::CUSTOM_EXTENSIONS_DIRECTORY_PATH);
-        $customModule = new CustomModule($customModuleRootPath, 'fcy');
-        $customThemeRootPath = \sprintf('%s/themes/a_theme', self::CUSTOM_EXTENSIONS_DIRECTORY_PATH);
-        $customTheme = new CustomTheme($customThemeRootPath, 'great_theme');
-
-        $defaultsConfiguration = $this->createMock(DefaultsConfiguration::class);
-        $defaultsConfiguration
-            ->expects($this->atLeastOnce())
-            ->method('getCacheDirectory')
-            ->willReturn('/foo/cache');
-
-        $this->assertEquals(new AbstractFileBackendDependantOptionsTestClass('/foo/cache/fcy.php', new ResourcesCollection(array(
-            new CustomExtensionFileResource(\sprintf('%s/bar.xml', $customModuleRootPath), $customModule),
-            new CustomExtensionFileResource(\sprintf('%s/src/bar/ccc_fcy.yml', $customModuleRootPath), $customModule),
-            new CustomExtensionFileResource(\sprintf('%s/src/BarFcyFoo.php', $customModuleRootPath), $customModule),
-            new CustomExtensionFileResource(\sprintf('%s/not_existing.file', $customModuleRootPath), $customModule),
-            new CustomExtensionFileResource(\sprintf('%s/foo.php', $customThemeRootPath), $customTheme),
-            new CustomExtensionFileResource(\sprintf('%s/src/great_theme_bar.yml', $customThemeRootPath), $customTheme),
-            new CustomExtensionFileResource(\sprintf('%s/src/not/great_theme/existing.yml', $customThemeRootPath), $customTheme),
-        ))), AbstractFileBackendDependantOptionsTestClass::getDefault(self::CUSTOM_EXTENSIONS_DIRECTORY_PATH, $defaultsConfiguration));
-    }
-
     private function getFileBackendDependantOptions(ResourcesCollection $resourcesCollection): AbstractFileBackendDependantOptionsTestClass
     {
         return new AbstractFileBackendDependantOptionsTestClass('/foobar', $resourcesCollection);

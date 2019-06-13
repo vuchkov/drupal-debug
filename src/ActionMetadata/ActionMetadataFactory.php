@@ -26,7 +26,7 @@ class ActionMetadataFactory
         $refl = new \ReflectionClass($class);
 
         if (!$refl->implementsInterface(ActionInterface::class)) {
-            throw new InvalidConfigurationException(\sprintf('The "%s"', $class, ActionInterface::class));
+            throw new InvalidConfigurationException(\sprintf('The "%s" class should implement the "%s" interface.', $class, ActionInterface::class));
         }
 
         return $refl->implementsInterface(ActionWithOptionsInterface::class) ?
