@@ -58,7 +58,7 @@ class SetupListener implements TestListener
 
         $drupalInstallationsCount = 0;
 
-        $process = new Process(\sprintf('%s %s/core/scripts/drupal install minimal', $phpBinary, $drupalDirectoryPath));
+        $process = new Process(\sprintf('%s %s/core/scripts/drupal install minimal', $phpBinary, $drupalDirectoryPath), null, null, null, null);
         $process->mustRun(function ($type, $output) use (&$drupalInstallationsCount): void {
             if (\is_int(\strpos($output, 'Congratulations, you installed Drupal!'))) {
                 ++$drupalInstallationsCount;
@@ -80,18 +80,6 @@ class SetupListener implements TestListener
         }
 
         $filesystem->rename(AbstractActionTestCase::DRUPAL_FILES_DIRECTORY_PATH, AbstractActionTestCase::REFERENCE_FILES_DIRECTORY_PATH);
-    }
-
-    /**
-     * {@inheritdoc}
-     */
-    public function endTestSuite(TestSuite $suite): void
-    {
-        if (!$this->supports($suite)) {
-            return;
-        }
-
-        // TODO : cleanup
     }
 
     /**
